@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: streamintel
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      auto-offset-reset: latest
+      max-poll-records: 2000
+    producer:
+      linger-ms: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+
+streamintel:
+  detection:
+    window: 240              # points kept per series for the baseline
+    min-samples: 60          # no alerts until a series has this much history
+    threshold: 6.0           # robust z-score
+    min-relative-change: 0.25  # and at least 25% away from the median
+    confirm: 3               # 3 of the last 5 points must be anomalous
+    of: 5
+  # Only alert in the direction that hurts; anything not listed alerts both ways.
+  directions:
+    latency_p99_ms: UP
+    error_rate: UP
+    rps: DOWN
+  correlation:
+    window: 2m
+    quiet-period: 5m
+  llm:
+    enabled: ${STREAMINTEL_LLM_ENABLED:false}
+    base-url: ${STREAMINTEL_LLM_BASE_URL:http://localhost:11434}
+    model: ${STREAMINTEL_LLM_MODEL:llama3.2}
+    api-key: ${STREAMINTEL_LLM_API_KEY:}
+    timeout: 8s
+  webhook-url: ${STREAMINTEL_WEBHOOK_URL:}
+  demo:
+    enabled: ${STREAMINTEL_DEMO:false}
